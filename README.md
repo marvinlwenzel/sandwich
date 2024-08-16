@@ -9,7 +9,7 @@ podman run \
    --env="SANDWICH_CHECK_URL=https://my.fvtt.wtf/" \
    --env="SANDWICH_WEBHOOK=https://discordapp.com/api/webhooks/1234567890123456789/xxxxxxxxx_xxxxxxxxxxxxxxxxxxxxxxxxx_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" \
    --env="SANDWICH_TARGET_DOWN_IDS=123456789012345678,8765432109876543210" 
-   \ ghcr.io/marvinlwenzel/sandwich:1.0.0
+   \ ghcr.io/marvinlwenzel/sandwich:latest
 ```
 
 ## How the sausage is made
