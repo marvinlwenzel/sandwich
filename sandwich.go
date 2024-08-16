@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"math/rand/v2"
 	"net/http"
 	"os"
 	"strconv"
@@ -14,8 +15,10 @@ import (
 	"golang.org/x/net/html"
 )
 
-const VERSION = "1.1.0"
+const VERSION = "1.2.0"
 const DEFAULT_WAIT_SECONDS = 15
+
+var ANIME_NAMES = []string{"Aika", "Aiko", "Akane", "Akari", "Akemi", "Ami", "Amu", "Anju", "Arisa", "Asuka", "Aya", "Ayaka", "Ayame", "Ayano", "Azusa", "Chie", "Chika", "Chihiro", "Chika", "Chiyo", "Chitose", "Eiko", "Emi", "Eriko", "Eri", "Erina", "Fumika", "Fuyumi", "Hikari", "Hina", "Hinata", "Hitomi", "Honoka", "Hotaru", "Ichika", "Inori", "Isuzu", "Itsuki", "Izumi", "Kagome", "Kaede", "Kaho", "Kaori", "Karin", "Kasumi", "Kayo", "Kira", "Kirara", "Koharu", "Kokoro", "Kotomi", "Kyouko", "Kyoko", "Madoka", "Mai", "Maiko", "Maki", "Mami", "Mana", "Mao", "Mari", "Marina", "Mayu", "Mayumi", "Megumi", "Mei", "Meiko", "Megu", "Mio", "Misaki", "Mitsuki", "Miyu", "Mizuki", "Nanami", "Nao", "Narumi", "Natsuki", "Nene", "Nia", "Nozomi", "Rika", "Riko", "Rin", "Rina", "Ritsu", "Rui", "Rumi", "Ruri", "Sachi", "Sachiko", "Saki", "Sakura", "Satsuki", "Saya", "Sayaka", "Shiori", "Shizuku", "Shizuka", "Sora", "Suzu", "Suzuka", "Suzume", "Taiga", "Tamaki", "Tomoe", "Tomoka", "Tomomi", "Tsukasa", "Tsukiko", "Umi", "Wakana", "Yaya", "Yoko", "Yui", "Yuiko", "Yuka", "Yukari", "Yukina", "Yumi", "Yumiko", "Yuna", "Yuno", "Yura", "Yuri", "Yurika", "Yuu", "Yuuki", "Yuuko", "Yuzuki", "Aoi", "Himeko", "Rena", "Kaguya", "Reina", "Setsuna", "Sana", "Chisato", "Mirai", "Misato", "Haruka", "Reina", "Yotsuba", "Fumino", "Sumire"}
 
 type discordUrl string
 type webhookUrl string
@@ -96,6 +99,9 @@ func (dms DiscordMentions) MarshalJSON() ([]byte, error) {
 	return json.Marshal(ss)
 }
 func main() {
+	nameIndex := rand.IntN(len(ANIME_NAMES))
+	myName := ANIME_NAMES[nameIndex]
+
 	rawTargetUrl, hasTargetUrl := os.LookupEnv("SANDWICH_CHECK_URL")
 	if !hasTargetUrl {
 		fmt.Fprintln(os.Stderr, "No URL from `SANDWICH_CHECK_URL`")
@@ -129,6 +135,7 @@ func main() {
 	targetDownUserIds := discordUserIdsFromEnvVar("SANDWICH_TARGET_DOWN_IDS")
 
 	fmt.Printf("S.A.N.D.W.I.C.H. Version %s\n", VERSION)
+	fmt.Printf("Name %s\n", myName)
 
 	fmt.Printf("Targeting %s\n", targetUrl)
 	fmt.Printf("Reporting to Webhook %s\n", webhook)
@@ -137,8 +144,8 @@ func main() {
 	fmt.Printf("Pinging in interval of %s seconds\n", waitSeconds)
 
 	helloData := WebhookMessage{
-		Content:  fmt.Sprintf("Hello, I am S.A.N.D.W.I.C.H. Version %s. Thanks for having me. https://github.com/marvinlwenzel/sandwich", VERSION),
-		Username: "S.A.N.D.W.I.C.H.",
+		Content:  fmt.Sprintf("Hello. I am %s, one new instance of S.A.N.D.W.I.C.H. version %s. Thanks for having me. https://github.com/marvinlwenzel/sandwich", myName, VERSION),
+		Username: myName,
 		Flags:    4096,
 		AllowedMentions: DiscordMentions{
 			Users: []discordUserId{},
@@ -154,7 +161,7 @@ func main() {
 		panic("Could not send Welcome Message to Webhook. Config or Impl might be screwed.")
 	}
 
-	go checkFoundry(targetUrl, webhook, targetDownUserIds, waitSeconds)
+	go checkFoundry(targetUrl, webhook, targetDownUserIds, waitSeconds, myName)
 	select {}
 }
 
@@ -172,7 +179,7 @@ func (status FoundryStatus) String() string {
 	return []string{"StartUp", "Dead", "InternalError", "UpAndNoWorld", "UpAndWorld"}[status]
 }
 
-func checkFoundry(targetUrl discordUrl, webhook webhookUrl, targetDownUserIds []discordUserId, waitSeconds uint64) {
+func checkFoundry(targetUrl discordUrl, webhook webhookUrl, targetDownUserIds []discordUserId, waitSeconds uint64, username string) {
 	waitTime := time.Duration(waitSeconds) * time.Second
 	status := Startup
 	for {
@@ -187,7 +194,7 @@ func checkFoundry(targetUrl discordUrl, webhook webhookUrl, targetDownUserIds []
 
 			data := WebhookMessage{
 				Content:  fmt.Sprintf("%s\n# %s has gone %s", pingString, targetUrl, newStatus),
-				Username: "S.A.N.D.W.I.C.H.",
+				Username: username,
 				Flags:    0,
 				AllowedMentions: DiscordMentions{
 					Users: []discordUserId{},
@@ -199,7 +206,7 @@ func checkFoundry(targetUrl discordUrl, webhook webhookUrl, targetDownUserIds []
 		} else if newStatus == UpAndNoWorld {
 			data := WebhookMessage{
 				Content:  fmt.Sprintf("%s is online with no world open.", targetUrl),
-				Username: "S.A.N.D.W.I.C.H.",
+				Username: username,
 				Flags:    4096,
 				AllowedMentions: DiscordMentions{
 					Users: []discordUserId{},
@@ -211,7 +218,7 @@ func checkFoundry(targetUrl discordUrl, webhook webhookUrl, targetDownUserIds []
 		} else if newStatus == UpAndWorld {
 			data := WebhookMessage{
 				Content:  fmt.Sprintf("%s is hosting %s", targetUrl, worldName),
-				Username: "S.A.N.D.W.I.C.H.",
+				Username: username,
 				Flags:    4096,
 				AllowedMentions: DiscordMentions{
 					Users: []discordUserId{},
