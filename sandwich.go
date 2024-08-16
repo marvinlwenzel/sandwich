@@ -14,7 +14,7 @@ import (
 	"golang.org/x/net/html"
 )
 
-const VERSION = "0.0.1"
+const VERSION = "1.1.0"
 const DEFAULT_WAIT_SECONDS = 15
 
 type discordUrl string
@@ -37,39 +37,47 @@ func (wm WebhookMessage) MarshalJSON() ([]byte, error) {
 		return json.Marshal(struct {
 			Content  string `json:"content"`
 			Username string `json:"username"`
+			Avatar   string `json:"avatar_url"`
 		}{
 			Content:  wm.Content,
 			Username: wm.Username,
+			Avatar:   "https://raw.githubusercontent.com/marvinlwenzel/sandwich/main/bing_portrait_of_tech_android_anime_girl_sandwich_chan_with_mechanicall_enhanced_eyes.jpg",
 		})
 	} else if len(wm.AllowedMentions.Users) == 0 && wm.Flags > 0 {
 		return json.Marshal(struct {
 			Content  string `json:"content"`
 			Username string `json:"username"`
+			Avatar   string `json:"avatar_url"`
 			Flags    int32  `json:"flags"`
 		}{
 			Content:  wm.Content,
 			Username: wm.Username,
+			Avatar:   "https://raw.githubusercontent.com/marvinlwenzel/sandwich/main/bing_portrait_of_tech_android_anime_girl_sandwich_chan_with_mechanicall_enhanced_eyes.jpg",
 			Flags:    wm.Flags,
 		})
 	} else if len(wm.AllowedMentions.Users) > 0 && wm.Flags == 0 {
 		return json.Marshal(struct {
 			Content         string          `json:"content"`
 			Username        string          `json:"username"`
+			Avatar          string          `json:"avatar_url"`
 			AllowedMentions DiscordMentions `json:"flags"`
 		}{
 			Content:         wm.Content,
 			Username:        wm.Username,
+			Avatar:          "https://raw.githubusercontent.com/marvinlwenzel/sandwich/main/bing_portrait_of_tech_android_anime_girl_sandwich_chan_with_mechanicall_enhanced_eyes.jpg",
 			AllowedMentions: wm.AllowedMentions,
 		})
 	} else {
 		return json.Marshal(struct {
 			Content         string          `json:"content"`
 			Username        string          `json:"username"`
+			Avatar          string          `json:"avatar_url"`
 			Flags           int32           `json:"flags"`
 			AllowedMentions DiscordMentions `json:"allowed_mentions"`
 		}{
 			Content:         wm.Content,
 			Username:        wm.Username,
+			Avatar:          "https://raw.githubusercontent.com/marvinlwenzel/sandwich/main/bing_portrait_of_tech_android_anime_girl_sandwich_chan_with_mechanicall_enhanced_eyes.jpg",
 			Flags:           wm.Flags,
 			AllowedMentions: wm.AllowedMentions,
 		})
