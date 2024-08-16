@@ -129,7 +129,7 @@ func main() {
 	fmt.Printf("Pinging in interval of %s seconds\n", waitSeconds)
 
 	helloData := WebhookMessage{
-		Content:  fmt.Sprintf("I am back. As version %s", VERSION),
+		Content:  fmt.Sprintf("Hello, I am S.A.N.D.W.I.C.H. Version %s. Thanks for having me. https://github.com/marvinlwenzel/sandwich", VERSION),
 		Username: "S.A.N.D.W.I.C.H.",
 		Flags:    4096,
 		AllowedMentions: DiscordMentions{
