@@ -15,13 +15,14 @@ import (
 	"golang.org/x/net/html"
 )
 
-const VERSION = "1.2.0"
+const VERSION = "1.3.0"
 const DEFAULT_WAIT_SECONDS = 15
 
 var ANIME_NAMES = []string{"Aika", "Aiko", "Akane", "Akari", "Akemi", "Ami", "Amu", "Anju", "Arisa", "Asuka", "Aya", "Ayaka", "Ayame", "Ayano", "Azusa", "Chie", "Chika", "Chihiro", "Chika", "Chiyo", "Chitose", "Eiko", "Emi", "Eriko", "Eri", "Erina", "Fumika", "Fuyumi", "Hikari", "Hina", "Hinata", "Hitomi", "Honoka", "Hotaru", "Ichika", "Inori", "Isuzu", "Itsuki", "Izumi", "Kagome", "Kaede", "Kaho", "Kaori", "Karin", "Kasumi", "Kayo", "Kira", "Kirara", "Koharu", "Kokoro", "Kotomi", "Kyouko", "Kyoko", "Madoka", "Mai", "Maiko", "Maki", "Mami", "Mana", "Mao", "Mari", "Marina", "Mayu", "Mayumi", "Megumi", "Mei", "Meiko", "Megu", "Mio", "Misaki", "Mitsuki", "Miyu", "Mizuki", "Nanami", "Nao", "Narumi", "Natsuki", "Nene", "Nia", "Nozomi", "Rika", "Riko", "Rin", "Rina", "Ritsu", "Rui", "Rumi", "Ruri", "Sachi", "Sachiko", "Saki", "Sakura", "Satsuki", "Saya", "Sayaka", "Shiori", "Shizuku", "Shizuka", "Sora", "Suzu", "Suzuka", "Suzume", "Taiga", "Tamaki", "Tomoe", "Tomoka", "Tomomi", "Tsukasa", "Tsukiko", "Umi", "Wakana", "Yaya", "Yoko", "Yui", "Yuiko", "Yuka", "Yukari", "Yukina", "Yumi", "Yumiko", "Yuna", "Yuno", "Yura", "Yuri", "Yurika", "Yuu", "Yuuki", "Yuuko", "Yuzuki", "Aoi", "Himeko", "Rena", "Kaguya", "Reina", "Setsuna", "Sana", "Chisato", "Mirai", "Misato", "Haruka", "Reina", "Yotsuba", "Fumino", "Sumire"}
 
-type discordUrl string
-type webhookUrl string
+type url string
+type foundryUrl url
+type webhookUrl url
 type discordUserId int64
 
 // func (id discordUserId) String() string {
@@ -102,19 +103,17 @@ func main() {
 	nameIndex := rand.IntN(len(ANIME_NAMES))
 	myName := ANIME_NAMES[nameIndex]
 
-	rawTargetUrl, hasTargetUrl := os.LookupEnv("SANDWICH_CHECK_URL")
-	if !hasTargetUrl {
-		fmt.Fprintln(os.Stderr, "No URL from `SANDWICH_CHECK_URL`")
+	targetUrls, tuErr := getUrlsFromEnv[foundryUrl]("SANDWICH_CHECK_URLS")
+	if tuErr != nil {
+		fmt.Fprintln(os.Stderr, "Could not parse `SANDWICH_CHECK_URLS`")
 		os.Exit(101)
 	}
-	targetUrl := discordUrl(rawTargetUrl)
 
-	rawWebhook, hasWebhook := os.LookupEnv("SANDWICH_WEBHOOK")
-	if !hasWebhook {
-		fmt.Fprintln(os.Stderr, "No URL from `SANDWICH_WEBHOOK`")
+	webhookUrls, whErr := getUrlsFromEnv[webhookUrl]("SANDWICH_WEBHOOKS")
+	if whErr != nil {
+		fmt.Fprintln(os.Stderr, "Could not parse `SANDWICH_WEBHOOKS`")
 		os.Exit(102)
 	}
-	webhook := webhookUrl(rawWebhook)
 
 	rawWaitSeconds, hasWaitSeconds := os.LookupEnv("SANDWICH_INTERVAL_SECONDS")
 	var (
@@ -137,14 +136,18 @@ func main() {
 	fmt.Printf("S.A.N.D.W.I.C.H. Version %s\n", VERSION)
 	fmt.Printf("Name %s\n", myName)
 
-	fmt.Printf("Targeting %s\n", targetUrl)
-	fmt.Printf("Reporting to Webhook %s\n", webhook)
+	fmt.Printf("Targeting %s\n", targetUrls)
+	fmt.Printf("Reporting to Webhook %s\n", webhookUrls)
 
 	fmt.Printf("Pinging target down to %s\n", targetDownUserIds)
 	fmt.Printf("Pinging in interval of %s seconds\n", waitSeconds)
 
+	targetUrlsString := ""
+	for i, targetUrl := range targetUrls {
+		targetUrlsString = fmt.Sprintf("%s\n%d. %s", targetUrlsString, i, targetUrl)
+	}
 	helloData := WebhookMessage{
-		Content:  fmt.Sprintf("Hello. I am %s, one new instance of S.A.N.D.W.I.C.H. version %s. Thanks for having me. https://github.com/marvinlwenzel/sandwich", myName, VERSION),
+		Content:  fmt.Sprintf("Hello.\n\nI am %s, one new instance of S.A.N.D.W.I.C.H. version %s. Thanks for having me.\n\nI will be listening for changed on%s\n\nYou can learn more on https://github.com/marvinlwenzel/sandwich", myName, VERSION, targetUrlsString),
 		Username: myName,
 		Flags:    4096,
 		AllowedMentions: DiscordMentions{
@@ -153,16 +156,32 @@ func main() {
 	}
 
 	hello, _ := json.Marshal(helloData)
-	resp, err := http.Post(string(webhook), "application/json", bytes.NewBuffer(hello))
-
-	if err != nil || int(resp.StatusCode/100) != 2 {
-		fmt.Printf("Err: %s\n", err)
-		fmt.Printf("resp: %s\n", resp)
-		panic("Could not send Welcome Message to Webhook. Config or Impl might be screwed.")
+	for _, webhook := range webhookUrls {
+		resp, err := http.Post(string(webhook), "application/json", bytes.NewBuffer(hello))
+		if err != nil || int(resp.StatusCode/100) != 2 {
+			fmt.Printf("Err: %s\n", err)
+			fmt.Printf("resp: %s\n", resp)
+			panic("Could not send Welcome Message to Webhook. Config or Impl might be screwed.")
+		}
 	}
 
-	go checkFoundry(targetUrl, webhook, targetDownUserIds, waitSeconds, myName)
+	for _, targetUrl := range targetUrls {
+		go checkFoundry(targetUrl, webhookUrls, targetDownUserIds, waitSeconds, myName)
+	}
 	select {}
+}
+
+func getUrlsFromEnv[U foundryUrl | webhookUrl](envName string) ([]U, error) {
+	rawTargetUrls, hasTargetUrls := os.LookupEnv(envName)
+	if !hasTargetUrls {
+		return nil, fmt.Errorf("Enviroment Variabel not set: %s", envName)
+	}
+	rawTargetUrlSlice := strings.Split(rawTargetUrls, ",")
+	urls := make([]U, len(rawTargetUrlSlice))
+	for i, value := range rawTargetUrlSlice {
+		urls[i] = U(value)
+	}
+	return urls, nil
 }
 
 type FoundryStatus int64
@@ -179,7 +198,7 @@ func (status FoundryStatus) String() string {
 	return []string{"StartUp", "Dead", "InternalError", "UpAndNoWorld", "UpAndWorld"}[status]
 }
 
-func checkFoundry(targetUrl discordUrl, webhook webhookUrl, targetDownUserIds []discordUserId, waitSeconds uint64, username string) {
+func checkFoundry(targetUrl foundryUrl, webhookUrls []webhookUrl, targetDownUserIds []discordUserId, waitSeconds uint64, username string) {
 	waitTime := time.Duration(waitSeconds) * time.Second
 	status := Startup
 	for {
@@ -201,7 +220,9 @@ func checkFoundry(targetUrl discordUrl, webhook webhookUrl, targetDownUserIds []
 				},
 			}
 			body, _ := json.Marshal(data)
-			_, _ = http.Post(string(webhook), "application/json", bytes.NewBuffer(body))
+			for _, webhook := range webhookUrls {
+				_, _ = http.Post(string(webhook), "application/json", bytes.NewBuffer(body))
+			}
 			fmt.Printf("New Status %s", newStatus)
 		} else if newStatus == UpAndNoWorld {
 			data := WebhookMessage{
@@ -213,7 +234,9 @@ func checkFoundry(targetUrl discordUrl, webhook webhookUrl, targetDownUserIds []
 				},
 			}
 			body, _ := json.Marshal(data)
-			_, _ = http.Post(string(webhook), "application/json", bytes.NewBuffer(body))
+			for _, webhook := range webhookUrls {
+				_, _ = http.Post(string(webhook), "application/json", bytes.NewBuffer(body))
+			}
 			fmt.Printf("New Status %s", newStatus)
 		} else if newStatus == UpAndWorld {
 			data := WebhookMessage{
@@ -225,7 +248,9 @@ func checkFoundry(targetUrl discordUrl, webhook webhookUrl, targetDownUserIds []
 				},
 			}
 			body, _ := json.Marshal(data)
-			_, _ = http.Post(string(webhook), "application/json", bytes.NewBuffer(body))
+			for _, webhook := range webhookUrls {
+				_, _ = http.Post(string(webhook), "application/json", bytes.NewBuffer(body))
+			}
 			fmt.Printf("New Status %s", newStatus)
 		}
 		status = newStatus
