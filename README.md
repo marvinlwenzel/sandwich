@@ -6,8 +6,8 @@ I just want to send a friend of mine an image to run to check from outside my ne
 
 ```bash
 podman run \
-   --env="SANDWICH_CHECK_URL=https://my.fvtt.wtf/" \
-   --env="SANDWICH_WEBHOOK=https://discordapp.com/api/webhooks/1234567890123456789/xxxxxxxxx_xxxxxxxxxxxxxxxxxxxxxxxxx_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" \
+   --env="SANDWICH_CHECK_URL=https://my.fvtt.wtf/,https://my.where.abc/" \
+   --env="SANDWICH_WEBHOOK=https://discordapp.com/api/webhooks/1234567890123456789/xxxxxxxxx_xxxxxxxxxxxxxxxxxxxxxxxxx_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx,https://discordapp.com/api/webhooks/0034567890123456789/xxxxxxxxx_xxxxxxxxxxxxxxxxxxxxxxxxx_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" \
    --env="SANDWICH_TARGET_DOWN_IDS=123456789012345678,8765432109876543210" 
    \ ghcr.io/marvinlwenzel/sandwich:latest
 ```
