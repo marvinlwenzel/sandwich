@@ -1,22 +1,19 @@
 # https://stackoverflow.com/a/45397221
 
-FROM alpine as certs
+FROM alpine as alp
 RUN apk update && apk add ca-certificates
-
-
-FROM busybox
-LABEL org.opencontainers.image.authors="Marvin Lukas Wenzel@mlw@mlw.wtf"
-
-COPY --from=certs /etc/ssl/certs /etc/ssl/certs
-
-# https://stackoverflow.com/questions/75696690/how-to-resolve-tls-failed-to-verify-certificate-x509-certificate-signed-by-un
-# check certer.sh as a little help
-# COPY /etc/pki/tls/certs/ca-bundle.crt /etc/ssl/certs/
-# COPY /etc/pki/tls/certs/ca-bundle.trust.crt /etc/ssl/certs/
-
 RUN mkdir /sandwich
-WORKDIR /sandwich
+COPY sandwich.stripped /sandwich/sandwich
 
-COPY sandwich ./
+FROM scratch
+LABEL org.opencontainers.image.authors="Marvin Lukas Wenzel<mlw@mlw.wtf>"
+LABEL org.opencontainers.image.url="https://github.com/marvinlwenzel/sandwich"
+LABEL org.opencontainers.image.documentation="https://github.com/marvinlwenzel/sandwich"
+LABEL org.opencontainers.image.source="https://github.com/marvinlwenzel/sandwich"
+LABEL org.opencontainers.image.title="S.A.N.D.W.I.C.H."
+LABEL org.opencontainers.image.description="Basic monitoring tool for checking remote webserver uptime and reporting them to discord hooks."
 
-CMD ["./sandwich"]
+COPY --from=alp /etc/ssl/certs /etc/ssl/certs
+COPY --from=alp /sandwich/sandwich /sandwich/sandwich
+
+CMD ["/sandwich/sandwich"]
