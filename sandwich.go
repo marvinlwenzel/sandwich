@@ -15,7 +15,7 @@ import (
 	"golang.org/x/net/html"
 )
 
-const VERSION = "1.4.0"
+const VERSION = "1.4.1"
 const DEFAULT_WAIT_SECONDS = 15
 
 var ANIME_NAMES = []string{"Aika", "Aiko", "Akane", "Akari", "Akemi", "Ami", "Amu", "Anju", "Arisa", "Asuka", "Aya", "Ayaka", "Ayame", "Ayano", "Azusa", "Chie", "Chika", "Chihiro", "Chika", "Chiyo", "Chitose", "Eiko", "Emi", "Eriko", "Eri", "Erina", "Fumika", "Fuyumi", "Hikari", "Hina", "Hinata", "Hitomi", "Honoka", "Hotaru", "Ichika", "Inori", "Isuzu", "Itsuki", "Izumi", "Kagome", "Kaede", "Kaho", "Kaori", "Karin", "Kasumi", "Kayo", "Kira", "Kirara", "Koharu", "Kokoro", "Kotomi", "Kyouko", "Kyoko", "Madoka", "Mai", "Maiko", "Maki", "Mami", "Mana", "Mao", "Mari", "Marina", "Mayu", "Mayumi", "Megumi", "Mei", "Meiko", "Megu", "Mio", "Misaki", "Mitsuki", "Miyu", "Mizuki", "Nanami", "Nao", "Narumi", "Natsuki", "Nene", "Nia", "Nozomi", "Rika", "Riko", "Rin", "Rina", "Ritsu", "Rui", "Rumi", "Ruri", "Sachi", "Sachiko", "Saki", "Sakura", "Satsuki", "Saya", "Sayaka", "Shiori", "Shizuku", "Shizuka", "Sora", "Suzu", "Suzuka", "Suzume", "Taiga", "Tamaki", "Tomoe", "Tomoka", "Tomomi", "Tsukasa", "Tsukiko", "Umi", "Wakana", "Yaya", "Yoko", "Yui", "Yuiko", "Yuka", "Yukari", "Yukina", "Yumi", "Yumiko", "Yuna", "Yuno", "Yura", "Yuri", "Yurika", "Yuu", "Yuuki", "Yuuko", "Yuzuki", "Aoi", "Himeko", "Rena", "Kaguya", "Reina", "Setsuna", "Sana", "Chisato", "Mirai", "Misato", "Haruka", "Reina", "Yotsuba", "Fumino", "Sumire"}
@@ -223,7 +223,7 @@ func checkFoundry(targetUrl foundryUrl, webhookUrls []webhookUrl, targetDownUser
 			for _, webhook := range webhookUrls {
 				_, _ = http.Post(string(webhook), "application/json", bytes.NewBuffer(body))
 			}
-			fmt.Printf("New Status %s", newStatus)
+			fmt.Printf("New Status %s\n", newStatus)
 		} else if newStatus == UpAndNoWorld {
 			data := WebhookMessage{
 				Content:  fmt.Sprintf("%s is online with no world open.", targetUrl),
@@ -237,7 +237,7 @@ func checkFoundry(targetUrl foundryUrl, webhookUrls []webhookUrl, targetDownUser
 			for _, webhook := range webhookUrls {
 				_, _ = http.Post(string(webhook), "application/json", bytes.NewBuffer(body))
 			}
-			fmt.Printf("New Status %s", newStatus)
+			fmt.Printf("New Status %s\n", newStatus)
 		} else if newStatus == UpAndWorld {
 			data := WebhookMessage{
 				Content:  fmt.Sprintf("%s is hosting %s", targetUrl, worldName),
@@ -251,7 +251,7 @@ func checkFoundry(targetUrl foundryUrl, webhookUrls []webhookUrl, targetDownUser
 			for _, webhook := range webhookUrls {
 				_, _ = http.Post(string(webhook), "application/json", bytes.NewBuffer(body))
 			}
-			fmt.Printf("New Status %s", newStatus)
+			fmt.Printf("New Status %s\n", newStatus)
 		}
 		status = newStatus
 		time.Sleep(waitTime)
